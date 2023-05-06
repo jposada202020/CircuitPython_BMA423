@@ -17,6 +17,7 @@ from micropython import const
 from adafruit_bus_device import i2c_device
 from adafruit_register.i2c_struct import ROUnaryStruct, UnaryStruct
 from adafruit_register.i2c_bits import RWBits
+from adafruit_register.i2c_bit import RWBit
 
 try:
     from busio import I2C
@@ -40,6 +41,34 @@ ACC_RANGE_8 = const(0x02)
 ACC_RANGE_16 = const(0x03)
 acc_range_values = (ACC_RANGE_2, ACC_RANGE_4, ACC_RANGE_8, ACC_RANGE_16)
 acc_range_factor = {0x00: 1024, 0x01: 512, 0x02: 256, 0x03: 128}
+
+# Output Data Rate
+BANDWIDTH_25_32 = const(0b0001)
+BANDWIDTH_25_16 = const(0b0010)
+BANDWIDTH_25_8 = const(0b0011)
+BANDWIDTH_25_4 = const(0b0100)
+BANDWIDTH_25_2 = const(0b0101)
+BANDWIDTH_25 = const(0b0110)
+BANDWIDTH_50 = const(0b0111)
+BANDWIDTH_100 = const(0b1000)
+BANDWIDTH_200 = const(0b1001)
+BANDWIDTH_400 = const(0b1010)
+BANDWIDTH_800 = const(0b1011)
+BANDWIDTH_1600 = const(0b1100)
+output_data_rate_values = (
+    BANDWIDTH_25_32,
+    BANDWIDTH_25_16,
+    BANDWIDTH_25_8,
+    BANDWIDTH_25_4,
+    BANDWIDTH_25_2,
+    BANDWIDTH_25,
+    BANDWIDTH_50,
+    BANDWIDTH_100,
+    BANDWIDTH_200,
+    BANDWIDTH_400,
+    BANDWIDTH_800,
+    BANDWIDTH_1600,
+)
 
 
 class BMA423:
@@ -77,7 +106,7 @@ class BMA423:
 
     _device_id = ROUnaryStruct(_REG_WHOAMI, "B")
     _acc_range = RWBits(2, _ACC_RANGE, 0)
-    _acc_on = RWBits(1, _PWR_CTRL, 2)
+    _acc_on = RWBit(_PWR_CTRL, 2)
 
     # ACC_CONF (0x40)
     # | ---- | ---- | ---- | ---- | odr(3) | odr(2) | odr(1) | odr(0) |
@@ -109,7 +138,7 @@ class BMA423:
         """
         alx = self._accx_value_LSB & 0xF0
         ahx = self._accx_value_MSB << 8
-        totx = (alx + ahx) >> 4
+        totx = (alx | ahx) >> 4
         totalx = self._twos_comp(totx, 12)
 
         aly = self._accy_value_LSB & 0xF0
@@ -167,6 +196,61 @@ class BMA423:
         time.sleep(0.16)
         temp = self._twos_comp(raw_temp, 8)
         return temp + 23
+
+    @property
+    def output_data_rate(self) -> str:
+        """
+        Sensor output_data_rate
+
+        +------------------------------------+--------------------+
+        | Mode                               | Value              |
+        +====================================+====================+
+        | :py:const:`bma423.BANDWIDTH_25_32` | :py:const:`0b0001` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_25_16` | :py:const:`0b0010` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_25_8`  | :py:const:`0b0011` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_25_4`  | :py:const:`0b0100` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_25_2`  | :py:const:`0b0101` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_25`    | :py:const:`0b0110` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_50`    | :py:const:`0b0111` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_100`   | :py:const:`0b1000` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_200`   | :py:const:`0b1001` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_400`   | :py:const:`0b1010` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_800`   | :py:const:`0b1011` |
+        +------------------------------------+--------------------+
+        | :py:const:`bma423.BANDWIDTH_1600`  | :py:const:`0b1100` |
+        +------------------------------------+--------------------+
+        """
+        values = (
+            "BANDWIDTH_25_32",
+            "BANDWIDTH_25_16",
+            "BANDWIDTH_25_8",
+            "BANDWIDTH_25_4",
+            "BANDWIDTH_25_2",
+            "BANDWIDTH_25",
+            "BANDWIDTH_50",
+            "BANDWIDTH_100",
+            "BANDWIDTH_200",
+            "BANDWIDTH_400",
+            "BANDWIDTH_800",
+            "BANDWIDTH_1600",
+        )
+        return values[self._output_data_rate]
+
+    @output_data_rate.setter
+    def output_data_rate(self, value: int) -> None:
+        if value not in output_data_rate_values:
+            raise ValueError("Value must be a valid output_data_rate setting")
+        self._output_data_rate = value
 
     @staticmethod
     def _twos_comp(val: int, bits: int) -> int:
