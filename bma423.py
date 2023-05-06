@@ -109,15 +109,18 @@ class BMA423:
         """
         alx = self._accx_value_LSB & 0xF0
         ahx = self._accx_value_MSB << 8
-        totalx = (alx + ahx) >> 4
+        totx = (alx + ahx) >> 4
+        totalx = self._twos_comp(totx, 12)
 
         aly = self._accy_value_LSB & 0xF0
         ahy = self._accy_value_MSB << 8
-        totaly = (aly + ahy) >> 4
+        toty = (aly + ahy) >> 4
+        totaly = self._twos_comp(toty, 12)
 
         alz = self._accz_value_LSB & 0xF0
         ahz = self._accz_value_MSB << 8
-        totalz = (alz + ahz) >> 4
+        totz = (alz + ahz) >> 4
+        totalz = self._twos_comp(totz, 12)
 
         factor = acc_range_factor[self._acc_range_mem]
         return totalx / factor, totaly / factor, totalz / factor
