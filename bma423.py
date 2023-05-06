@@ -15,11 +15,12 @@ BMA423 Bosch Accelerometer CircuitPython Driver included in the Lilygo Watch V3
 import time
 from micropython import const
 from adafruit_bus_device import i2c_device
-from adafruit_register.i2c_struct import ROUnaryStruct, Struct, UnaryStruct
+from adafruit_register.i2c_struct import ROUnaryStruct, UnaryStruct
 from adafruit_register.i2c_bits import RWBits
 
 try:
     from busio import I2C
+    from typing import Tuple
 except ImportError:
     pass
 
@@ -98,7 +99,6 @@ class BMA423:
             raise RuntimeError("Failed to find BMA423")
 
         self._acc_on = True
-        self._power_mode = NORMAL_MODE
         self._acc_range_mem = self._acc_range
 
     @property
@@ -121,7 +121,6 @@ class BMA423:
 
         factor = acc_range_factor[self._acc_range_mem]
         return totalx / factor, totaly / factor, totalz / factor
-
 
     @property
     def acc_range(self) -> str:
