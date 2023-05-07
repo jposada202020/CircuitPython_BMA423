@@ -70,6 +70,20 @@ output_data_rate_values = (
     BANDWIDTH_1600,
 )
 
+# Oversample Rate
+OSR1 = const(0x00)
+OSR2 = const(0x01)
+OSR4 = const(0x02)
+OSR8 = const(0x03)
+OSR16 = const(0x04)
+OSR32 = const(0x05)
+OSR64 = const(0x06)
+OSR128 = const(0x07)
+oversample_rate_values = (OSR1, OSR2, OSR4, OSR8, OSR16, OSR32, OSR64, OSR128)
+
+CIC_AVG = const(0x00)
+CONT = const(0x01)
+filter_performance_values = (CIC_AVG, CONT)
 
 class BMA423:
     """Driver for the BMA400 Sensor connected over I2C.
@@ -105,12 +119,18 @@ class BMA423:
     """
 
     _device_id = ROUnaryStruct(_REG_WHOAMI, "B")
-    _acc_range = RWBits(2, _ACC_RANGE, 0)
+
     _acc_on = RWBit(_PWR_CTRL, 2)
 
     # ACC_CONF (0x40)
-    # | ---- | ---- | ---- | ---- | odr(3) | odr(2) | odr(1) | odr(0) |
+    # | acc_perf_mode | acc_bwp(2) | acc_bwp(1) | acc_bwp(0) | odr(3) | odr(2) | odr(1) | odr(0) |
     _output_data_rate = RWBits(4, _ACC_CONF, 0)
+    _oversample_rate = RWBits(3, _ACC_CONF, 4)
+    _filter_performance = RWBit (_ACC_CONF, 7)
+
+    # ACC_RANGE (0x41)
+    # | ---- | ---- | ---- | ---- | ---- | ---- | acc_range(1) | acc_range(0) |
+    _acc_range = RWBits(2, _ACC_RANGE, 0)
 
     # Acceleration Data
     _accx_value_LSB = UnaryStruct(0x12, "B")
@@ -162,13 +182,13 @@ class BMA423:
         +---------------------------------+------------------+
         | Mode                            | Value            |
         +=================================+==================+
-        | :py:const:`bma400.ACC_RANGE_2`  | :py:const:`0x00` |
+        | :py:const:`bma423.ACC_RANGE_2`  | :py:const:`0x00` |
         +---------------------------------+------------------+
-        | :py:const:`bma400.ACC_RANGE_4`  | :py:const:`0x01` |
+        | :py:const:`bma423.ACC_RANGE_4`  | :py:const:`0x01` |
         +---------------------------------+------------------+
-        | :py:const:`bma400.ACC_RANGE_8`  | :py:const:`0x02` |
+        | :py:const:`bma423.ACC_RANGE_8`  | :py:const:`0x02` |
         +---------------------------------+------------------+
-        | :py:const:`bma400.ACC_RANGE_16` | :py:const:`0x03` |
+        | :py:const:`bma423.ACC_RANGE_16` | :py:const:`0x03` |
         +---------------------------------+------------------+
         """
         values = (
@@ -251,6 +271,64 @@ class BMA423:
         if value not in output_data_rate_values:
             raise ValueError("Value must be a valid output_data_rate setting")
         self._output_data_rate = value
+
+    @property
+    def oversample_rate(self) -> str:
+        """
+        Sensor oversample_rate. Bandwidth parameter, determines filter configuration
+        (acc_perf_mode=1) and averaging for undersampling mode (acc_perf_mode=0)
+
+        +---------------------------+------------------+
+        | Mode                      | Value            |
+        +===========================+==================+
+        | :py:const:`bma423.OSR1`   | :py:const:`0x00` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR2`   | :py:const:`0x01` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR4`   | :py:const:`0x02` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR8`   | :py:const:`0x03` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR16`  | :py:const:`0x04` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR32`  | :py:const:`0x05` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR64`  | :py:const:`0x06` |
+        +---------------------------+------------------+
+        | :py:const:`bma423.OSR128` | :py:const:`0x07` |
+        +---------------------------+------------------+
+        """
+        values = ("OSR1", "OSR2", "OSR4", "OSR8", "OSR16", "OSR32", "OSR64", "OSR128",)
+        return values[self._oversample_rate]
+
+    @oversample_rate.setter
+    def oversample_rate(self, value: int) -> None:
+        if value not in oversample_rate_values:
+            raise ValueError("Value must be a valid oversample_rate setting")
+        self._filter_performance = True
+        self._oversample_rate = value
+
+    @property
+    def filter_performance(self) -> str:
+        """
+        Sensor filter_performance
+
+        +----------------------------+------------------+
+        | Mode                       | Value            |
+        +============================+==================+
+        | :py:const:`bma423.CIC_AVG` | :py:const:`0x00` |
+        +----------------------------+------------------+
+        | :py:const:`bma423.CONT`    | :py:const:`0x01` |
+        +----------------------------+------------------+
+        """
+        values = ("CIC_AVG", "CONT",)
+        return values[self._filter_performance]
+
+    @filter_performance.setter
+    def filter_performance(self, value: int) -> None:
+        if value not in filter_performance_values:
+            raise ValueError("Value must be a valid filter_performance setting")
+        self._filter_performance = value
 
     @staticmethod
     def _twos_comp(val: int, bits: int) -> int:
