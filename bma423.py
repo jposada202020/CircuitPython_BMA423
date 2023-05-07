@@ -85,6 +85,7 @@ CIC_AVG = const(0x00)
 CONT = const(0x01)
 filter_performance_values = (CIC_AVG, CONT)
 
+
 class BMA423:
     """Driver for the BMA400 Sensor connected over I2C.
 
@@ -126,7 +127,7 @@ class BMA423:
     # | acc_perf_mode | acc_bwp(2) | acc_bwp(1) | acc_bwp(0) | odr(3) | odr(2) | odr(1) | odr(0) |
     _output_data_rate = RWBits(4, _ACC_CONF, 0)
     _oversample_rate = RWBits(3, _ACC_CONF, 4)
-    _filter_performance = RWBit (_ACC_CONF, 7)
+    _filter_performance = RWBit(_ACC_CONF, 7)
 
     # ACC_RANGE (0x41)
     # | ---- | ---- | ---- | ---- | ---- | ---- | acc_range(1) | acc_range(0) |
@@ -298,7 +299,16 @@ class BMA423:
         | :py:const:`bma423.OSR128` | :py:const:`0x07` |
         +---------------------------+------------------+
         """
-        values = ("OSR1", "OSR2", "OSR4", "OSR8", "OSR16", "OSR32", "OSR64", "OSR128",)
+        values = (
+            "OSR1",
+            "OSR2",
+            "OSR4",
+            "OSR8",
+            "OSR16",
+            "OSR32",
+            "OSR64",
+            "OSR128",
+        )
         return values[self._oversample_rate]
 
     @oversample_rate.setter
@@ -321,7 +331,10 @@ class BMA423:
         | :py:const:`bma423.CONT`    | :py:const:`0x01` |
         +----------------------------+------------------+
         """
-        values = ("CIC_AVG", "CONT",)
+        values = (
+            "CIC_AVG",
+            "CONT",
+        )
         return values[self._filter_performance]
 
     @filter_performance.setter
