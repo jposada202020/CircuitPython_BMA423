@@ -1,27 +1,11 @@
-Introduction
-============
+⛔️ DEPRECATED
+===============
 
+This repository is no longer supported, please consider using alternatives.
 
-.. image:: https://readthedocs.org/projects/circuitpython-bma423/badge/?version=latest
-    :target: https://circuitpython-bma423.readthedocs.io/
-    :alt: Documentation Status
-
-
-.. image:: https://img.shields.io/pypi/v/circuitpython-bma423.svg
-    :alt: latest version on PyPI
-    :target: https://pypi.python.org/pypi/circuitpython-bma423
-
-.. image:: https://static.pepy.tech/personalized-badge/circuitpython-bma423?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Pypi%20Downloads
-    :alt: Total PyPI downloads
-    :target: https://pepy.tech/project/circuitpython-bma423
-
-.. image:: https://github.com/jposada202020/CircuitPython_BMA423/workflows/Build%20CI/badge.svg
-    :target: https://github.com/jposada202020/CircuitPython_BMA423/actions
-    :alt: Build Status
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-    :alt: Code Style: Black
+.. image:: http://unmaintained.tech/badge.svg
+  :target: http://unmaintained.tech
+  :alt: No Maintenance Intended
 
 CircuitPython Driver for the Bosch BMA423 accelerometer included in the lilygo watch
 
